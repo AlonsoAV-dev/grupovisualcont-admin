@@ -54,24 +54,36 @@ export default function AdminLayout({ children }) {
         return;
       }
 
-      const res = await authFetch('/api/auth/me');
-      
-      console.log('📡 Respuesta auth:', res.status, res.ok);
+      // Obtener datos reales del usuario desde el backend
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const response = await fetch(`${apiUrl}/api/auth/me`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
-      if (res.ok) {
-        const data = await res.json();
-        console.log('✅ Autenticación exitosa');
-        setUser(data.user);
-      } else {
-        console.log('❌ Autenticación fallida, limpiando token');
+      if (!response.ok) {
+        console.log('❌ Token inválido, limpiando y redirigiendo');
         localStorage.removeItem('auth_token');
         router.push('/admin');
+        return;
       }
+
+      const data = await response.json();
+      console.log('✅ Usuario obtenido del backend:', data);
+      
+      const userData = data.user || data.usuario || data;
+      console.log('👤 Datos del usuario a setear:', userData);
+      console.log('📛 Nombre:', userData.nombre, 'Email:', userData.email, 'Rol:', userData.rol);
+      
+      setUser(userData);
+      setLoading(false);
+      
     } catch (error) {
       console.error('💥 Error verificando autenticación:', error);
       localStorage.removeItem('auth_token');
       router.push('/admin');
-    } finally {
       setLoading(false);
     }
   };
@@ -88,10 +100,10 @@ export default function AdminLayout({ children }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-blue-900 dark:bg-gray-800 ">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Cargando panel...</p>
+          <div className="inline-block animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-white mb-4"></div>
+          <p className="text-white text-lg font-medium">Cargando panel...</p>
         </div>
       </div>
     );
@@ -166,7 +178,7 @@ export default function AdminLayout({ children }) {
           <div className={`p-4 border-b border-[rgba(20,60,110,0.5)] ${sidebarCollapsed ? 'px-2' : ''}`}>
             <div className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'}`}>
               <div className="w-10 h-10 rounded-full bg-[rgba(50,110,180,1)] flex items-center justify-center text-white font-semibold text-sm shadow-sm">
-                {user.nombre.charAt(0).toUpperCase()}
+                {user?.nombre?.charAt(0).toUpperCase() || 'U'}
               </div>
               {!sidebarCollapsed && (
                 <div className="flex-1 min-w-0">
@@ -174,7 +186,7 @@ export default function AdminLayout({ children }) {
                     {user.nombre}
                   </p>
                   <span className="inline-block text-xs bg-blue-900 px-2 py-0.5 rounded text-blue-200 uppercase tracking-wide font-medium">
-                    {user.rol}
+                    {user?.rol || 'user'}
                   </span>
                 </div>
               )}
