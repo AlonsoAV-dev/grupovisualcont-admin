@@ -76,8 +76,8 @@ export default function AdminLogin() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[rgba(30,77,142,1)] dark:bg-[rgba(20,55,100,1)] px-4 py-8">
-<div className="w-full max-w-5xl flex flex-col lg:flex-row items-stretch overflow-hidden rounded-3xl shadow-2xl">
-<div className="flex-1 bg-white/5 backdrop-blur-sm border-r-0 lg:border-r-2 border-white/20 p-8 lg:p-12 text-center flex flex-col justify-center items-center">
+      <div className="w-full max-w-5xl flex flex-col lg:flex-row items-stretch overflow-hidden rounded-3xl shadow-2xl">
+        <div className="flex-1 bg-white/5 backdrop-blur-sm border-r-0 lg:border-r-2 border-white/20 p-8 lg:p-12 text-center flex flex-col justify-center items-center">
           <div className="space-y-6">
             <div className="inline-block lg:block">
               <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20 inline-flex items-center gap-2 mb-6">
