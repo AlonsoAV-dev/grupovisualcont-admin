@@ -97,10 +97,7 @@ export default function AdminLogin() {
               <p className="text-xl text-white/90 font-medium">Ingresa</p>
               <p className="text-white/70 text-base max-w-md mx-auto lg:mx-0">Estás a solo un paso del panel.</p>
             </div>
-            <div className="pt-8">
-              <p className="text-white/60 text-sm mb-4">¿No tienes una cuenta?</p>
-              <button className="px-8 py-3 border-2 border-white/30 text-white rounded-full hover:bg-white/10 transition-all duration-300 font-medium">Regístrate</button>
-            </div>
+
           </div>
         </div>
 
@@ -111,7 +108,7 @@ export default function AdminLogin() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-600 mb-2">Email</label>
-              <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" className="block w-full px-4 py-3.5 border-b-2 border-gray-200 focus:border-[rgba(30,77,142,1)] focus:outline-none bg-transparent text-gray-900 transition-colors placeholder:text-gray-400" placeholder="kabbolliate@gmail.com" disabled={loading} />
+              <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" className="block w-full px-4 py-3.5 border-b-2 border-gray-200 focus:border-[rgba(30,77,142,1)] focus:outline-none bg-transparent text-gray-900 transition-colors placeholder:text-gray-400" placeholder="usuario@gmail.com" disabled={loading} />
             </div>
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-600 mb-2">Contraseña</label>
