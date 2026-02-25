@@ -260,7 +260,7 @@ export default function AdminDashboard() {
           )}
 
           <Link
-            href="/admin/keywords"
+            href="/admin/page-keywords"
             className="block bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-5 hover:border-purple-300 dark:hover:border-purple-700 hover:shadow-md transition-all"
           >
             <div className="flex items-start space-x-3">

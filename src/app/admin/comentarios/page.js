@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Pagination from '@/components/admin/Pagination';
-import { authFetch } from '@/lib/authUtils';
+import { authFetch, canDeleteComentario, canModerateComentario, handlePermissionError, isAdmin } from '@/lib/authUtils';
 
 export default function ComentariosAdmin() {
   const router = useRouter();
@@ -11,10 +11,32 @@ export default function ComentariosAdmin() {
   const [filtro, setFiltro] = useState(''); // '' = Todos
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
+    loadCurrentUser();
     loadComentarios();
   }, [filtro]);
+
+  const loadCurrentUser = async () => {
+    try {
+      const res = await authFetch('/api/auth/me');
+      if (res.ok) {
+        const data = await res.json();
+        const user = data.user || data.usuario || data;
+        
+        // Normalizar el campo id_usuario (la API puede devolver "id" o "id_usuario")
+        if (user && !user.id_usuario && user.id) {
+          user.id_usuario = user.id;
+        }
+        
+        console.log('👤 Usuario cargado (comentarios):', user);
+        setCurrentUser(user);
+      }
+    } catch (error) {
+      console.error('Error al cargar usuario:', error);
+    }
+  };
 
   const loadComentarios = async () => {
     try {
@@ -23,7 +45,15 @@ export default function ComentariosAdmin() {
         : '/api/comentarios';
       const res = await authFetch(url);
       const data = await res.json();
-      setComentarios(data.comentarios || []);
+      const comentariosList = data.comentarios || [];
+      
+      // Log para debug
+      if (comentariosList.length > 0) {
+        console.log('💬 Comentarios cargados:', comentariosList.length);
+        console.log('💬 Primer comentario (ejemplo):', comentariosList[0]);
+      }
+      
+      setComentarios(comentariosList);
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -65,6 +95,11 @@ export default function ComentariosAdmin() {
       if (res.ok) {
         // Actualizar estado inmediatamente eliminando el comentario
         setComentarios(prev => prev.filter(com => com.id_comentario !== id));
+      } else if (handlePermissionError(res)) {
+        // Error 403 manejado
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Error al eliminar el comentario');
       }
     } catch (error) {
       console.error('Error:', error);
@@ -174,32 +209,39 @@ export default function ComentariosAdmin() {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  {comentario.estado !== 1 && (
-                    <button
-                      onClick={() =>
-                        handleUpdateEstado(comentario.id_comentario, 1)
-                      }
-                      className="text-green-600 hover:text-green-900 mr-3"
-                    >
-                      Aprobar
-                    </button>
+                  {currentUser && canModerateComentario(comentario, currentUser) && (
+                    <>
+                      {comentario.estado !== 1 && (
+                        <button
+                          onClick={() =>
+                            handleUpdateEstado(comentario.id_comentario, 1)
+                          }
+                          className="text-green-600 hover:text-green-900 mr-3"
+                        >
+                          Aprobar
+                        </button>
+                      )}
+                      {comentario.estado !== 3 && (
+                        <button
+                          onClick={() =>
+                            handleUpdateEstado(comentario.id_comentario, 3)
+                          }
+                          className="text-orange-600 hover:text-orange-900 mr-3"
+                        >
+                          Spam
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleDelete(comentario.id_comentario)}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        Eliminar
+                      </button>
+                    </>
                   )}
-                  {comentario.estado !== 3 && (
-                    <button
-                      onClick={() =>
-                        handleUpdateEstado(comentario.id_comentario, 3)
-                      }
-                      className="text-orange-600 hover:text-orange-900 mr-3"
-                    >
-                      Spam
-                    </button>
+                  {currentUser && !canModerateComentario(comentario, currentUser) && (
+                    <span className="text-gray-400 text-xs">Sin permisos</span>
                   )}
-                  <button
-                    onClick={() => handleDelete(comentario.id_comentario)}
-                    className="text-red-600 hover:text-red-900"
-                  >
-                    Eliminar
-                  </button>
                 </td>
               </tr>
               ))

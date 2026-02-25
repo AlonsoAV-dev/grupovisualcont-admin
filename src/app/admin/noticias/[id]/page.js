@@ -20,7 +20,6 @@ export default function NoticiaEditor() {
     contenido: '',
     imagen_principal: '',
     id_categoria: '',
-    nombre_autor: '',
     estado: 'borrador',
     keywords: [],
   });
@@ -42,8 +41,6 @@ export default function NoticiaEditor() {
       await loadData(); // Esperar a que cargue primero
       if (isEditing) {
         await loadNoticia(); // Luego cargar la noticia con sus keywords
-      } else {
-        loadCurrentUser();
       }
     };
     
@@ -70,24 +67,6 @@ export default function NoticiaEditor() {
     }
   };
 
-  const loadCurrentUser = async () => {
-    try {
-      const res = await authFetch('/api/auth/me');
-      if (res.ok) {
-        const data = await res.json();
-        if (data.user && data.user.nombre) {
-          // Rellenar el campo de autor con el nombre del usuario actual
-          setFormData(prev => ({
-            ...prev,
-            nombre_autor: data.user.nombre
-          }));
-        }
-      }
-    } catch (error) {
-      console.error('Error al cargar usuario actual:', error);
-    }
-  };
-
   const loadNoticia = async () => {
     try {
       const res = await authFetch(`/api/noticias/${params.id}`);
@@ -99,7 +78,6 @@ export default function NoticiaEditor() {
           contenido: data.noticia.contenido || '',
           imagen_principal: data.noticia.imagen_principal || '',
           id_categoria: data.noticia.id_categoria || '',
-          nombre_autor: data.noticia.nombre_autor || '',
           estado: data.noticia.estado || 'borrador',
           keywords: data.noticia.keywords?.map(k => k.id_keyword) || [],
         });
@@ -411,22 +389,6 @@ export default function NoticiaEditor() {
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Autor *
-              </label>
-              <input
-                type="text"
-                value={formData.nombre_autor}
-                onChange={(e) =>
-                  setFormData({ ...formData, nombre_autor: e.target.value })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
-                placeholder="Nombre del autor"
-                required
-              />
-            </div>
-
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Título *

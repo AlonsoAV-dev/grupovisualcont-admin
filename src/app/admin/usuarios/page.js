@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Pagination from '@/components/admin/Pagination';
-import { authFetch } from '@/lib/authUtils';
+import { authFetch, isAdmin, handlePermissionError } from '@/lib/authUtils';
 
 export default function UsuariosAdmin() {
   const router = useRouter();
@@ -12,6 +12,7 @@ export default function UsuariosAdmin() {
   const [editingUser, setEditingUser] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  const [currentUser, setCurrentUser] = useState(null);
   const [formData, setFormData] = useState({
     nombre: '',
     email: '',
@@ -20,8 +21,21 @@ export default function UsuariosAdmin() {
   });
 
   useEffect(() => {
+    loadCurrentUser();
     loadUsuarios();
   }, []);
+
+  const loadCurrentUser = async () => {
+    try {
+      const res = await authFetch('/api/auth/me');
+      if (res.ok) {
+        const data = await res.json();
+        setCurrentUser(data.user || data.usuario || data);
+      }
+    } catch (error) {
+      console.error('Error al cargar usuario:', error);
+    }
+  };
 
   const loadUsuarios = async () => {
     try {
@@ -41,6 +55,13 @@ export default function UsuariosAdmin() {
 
   const handleCreate = async (e) => {
     e.preventDefault();
+    
+    // Solo admin puede crear usuarios (se valida en el backend también)
+    if (!isAdmin(currentUser)) {
+      alert('No tienes permisos para crear usuarios.');
+      return;
+    }
+
     try {
       const res = await authFetch('/api/usuarios', {
         method: 'POST',
@@ -54,6 +75,8 @@ export default function UsuariosAdmin() {
         await loadUsuarios();
         setFormData({ nombre: '', email: '', password: '', rol: 'editor' });
         setShowModal(false);
+      } else if (handlePermissionError(res)) {
+        // Error 403 manejado
       } else {
         const data = await res.json();
         alert(data.error);
@@ -76,6 +99,13 @@ export default function UsuariosAdmin() {
 
   const handleUpdate = async (e) => {
     e.preventDefault();
+    
+    // Solo admin puede editar usuarios
+    if (!isAdmin(currentUser)) {
+      alert('No tienes permisos para editar usuarios.');
+      return;
+    }
+
     try {
       const updateData = {
         nombre: formData.nombre,
@@ -100,6 +130,8 @@ export default function UsuariosAdmin() {
         setFormData({ nombre: '', email: '', password: '', rol: 'editor' });
         setShowModal(false);
         setEditingUser(null);
+      } else if (handlePermissionError(res)) {
+        // Error 403 manejado
       } else {
         const data = await res.json();
         alert(data.error);
@@ -133,6 +165,12 @@ export default function UsuariosAdmin() {
   const handleDelete = async (id) => {
     if (!confirm('¿Estás seguro de eliminar este usuario? Esta acción no se puede deshacer.')) return;
 
+    // Solo admin puede eliminar usuarios
+    if (!isAdmin(currentUser)) {
+      alert('No tienes permisos para eliminar usuarios.');
+      return;
+    }
+
     try {
       const res = await authFetch(`/api/usuarios/${id}`, {
         method: 'DELETE',
@@ -141,6 +179,8 @@ export default function UsuariosAdmin() {
       if (res.ok) {
         // Recargar la lista completa para asegurar sincronización
         await loadUsuarios();
+      } else if (handlePermissionError(res)) {
+        // Error 403 manejado
       } else {
         const data = await res.json();
         alert(data.error);
@@ -184,18 +224,23 @@ export default function UsuariosAdmin() {
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
           Usuarios
         </h1>
-        <button
-          onClick={() => setShowModal(true)}
-          className="px-4 py-2 bg-[#257CD0] text-white rounded-md hover:bg-[#1e6bb8]"
-        >
-          + Nuevo Usuario
-        </button>
+        {currentUser && isAdmin(currentUser) && (
+          <button
+            onClick={() => setShowModal(true)}
+            className="px-4 py-2 bg-[#257CD0] text-white rounded-md hover:bg-[#1e6bb8]"
+          >
+            + Nuevo Usuario
+          </button>
+        )}
       </div>
 
       <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                ID
+              </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 Nombre
               </th>
@@ -219,13 +264,16 @@ export default function UsuariosAdmin() {
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {currentItems.length === 0 ? (
               <tr>
-                <td colSpan="6" className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                <td colSpan="7" className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
                   No hay usuarios para mostrar
                 </td>
               </tr>
             ) : (
               currentItems.map((usuario) => (
               <tr key={usuario.id_usuario}>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                  {usuario.id_usuario}
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                   {usuario.nombre}
                 </td>
@@ -258,26 +306,25 @@ export default function UsuariosAdmin() {
                   {formatFecha(usuario.ultimo_login)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
-                  <button
-                    onClick={() => handleEdit(usuario)}
-                    className="text-blue-600 hover:text-blue-900 dark:text-blue-400"
-                  >
-                    Editar
-                  </button>
-                  {/* <button
-                    onClick={() =>
-                      handleToggleEstado(usuario.id_usuario, usuario.estado)
-                    }
-                    className="text-orange-600 hover:text-orange-900 dark:text-orange-400"
-                  >
-                    {usuario.estado === 1 ? 'Suspender' : 'Activar'}
-                  </button> */}
-                  <button
-                    onClick={() => handleDelete(usuario.id_usuario)}
-                    className="text-red-600 hover:text-red-900 dark:text-red-400"
-                  >
-                    Eliminar
-                  </button>
+                  {currentUser && isAdmin(currentUser) && (
+                    <>
+                      <button
+                        onClick={() => handleEdit(usuario)}
+                        className="text-blue-600 hover:text-blue-900 dark:text-blue-400"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => handleDelete(usuario.id_usuario)}
+                        className="text-red-600 hover:text-red-900 dark:text-red-400"
+                      >
+                        Eliminar
+                      </button>
+                    </>
+                  )}
+                  {currentUser && !isAdmin(currentUser) && (
+                    <span className="text-gray-400 text-xs">Solo Admin</span>
+                  )}
                 </td>
               </tr>
               ))
@@ -356,10 +403,14 @@ export default function UsuariosAdmin() {
                     setFormData({ ...formData, rol: e.target.value })
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
+                  disabled={!isAdmin(currentUser)}
                 >
                   <option value="editor">Editor</option>
                   <option value="admin">Admin</option>
                 </select>
+                {!isAdmin(currentUser) && (
+                  <p className="text-xs text-gray-500 mt-1">Solo los administradores pueden cambiar roles.</p>
+                )}
               </div>
               <div className="flex justify-end space-x-2">
                 <button

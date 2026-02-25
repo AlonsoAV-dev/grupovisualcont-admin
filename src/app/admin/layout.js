@@ -117,7 +117,6 @@ export default function AdminLayout({ children }) {
     { href: '/admin/dashboard', icon: faChartLine, label: 'Dashboard' },
     { href: '/admin/noticias', icon: faNewspaper, label: 'Noticias' },
     { href: '/admin/comentarios', icon: faComments, label: 'Comentarios' },
-    { href: '/admin/categorias', icon: faLayerGroup, label: 'Categorías' },
   ];
 
   const seoMenuItems = [
@@ -127,6 +126,7 @@ export default function AdminLayout({ children }) {
 
   if (user.rol === 'admin') {
     menuItems.push({ href: '/admin/usuarios', icon: faUsers, label: 'Usuarios' });
+    menuItems.push({ href: '/admin/categorias', icon: faLayerGroup, label: 'Categorías' });
   }
 
   return (
@@ -219,55 +219,57 @@ export default function AdminLayout({ children }) {
             })}
 
             {/* SEO Menu */}
-            <div>
-              <button
-                onClick={() => setSeoMenuOpen(!seoMenuOpen)}
-                className={`w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-colors text-blue-100 hover:bg-[rgba(40,90,160,0.5)] hover:text-white ${
-                  sidebarCollapsed ? 'justify-center' : 'justify-between'
-                }`}
-                title={sidebarCollapsed ? 'SEO' : ''}
-              >
-                <div className={`flex items-center ${sidebarCollapsed ? '' : 'flex-1'}`}>
-                  <FontAwesomeIcon 
-                    icon={faSearch} 
-                    className={`w-4 h-4 ${!sidebarCollapsed ? 'mr-3' : ''} text-blue-200`}
-                  />
-                  {!sidebarCollapsed && <span>SEO</span>}
-                </div>
-                {!sidebarCollapsed && (
-                  <FontAwesomeIcon 
-                    icon={seoMenuOpen ? faChevronUp : faChevronDown} 
-                    className="w-3 h-3 text-blue-200"
-                  />
+            {user?.rol === 'admin' && (
+              <div> 
+                <button
+                  onClick={() => setSeoMenuOpen(!seoMenuOpen)}
+                  className={`w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-colors text-blue-100 hover:bg-[rgba(40,90,160,0.5)] hover:text-white ${
+                    sidebarCollapsed ? 'justify-center' : 'justify-between'
+                  }`}
+                  title={sidebarCollapsed ? 'SEO' : ''}
+                >
+                  <div className={`flex items-center ${sidebarCollapsed ? '' : 'flex-1'}`}>
+                    <FontAwesomeIcon 
+                      icon={faSearch} 
+                      className={`w-4 h-4 ${!sidebarCollapsed ? 'mr-3' : ''} text-blue-200`}
+                    />
+                    {!sidebarCollapsed && <span>SEO</span>}
+                  </div>
+                  {!sidebarCollapsed && (
+                    <FontAwesomeIcon 
+                      icon={seoMenuOpen ? faChevronUp : faChevronDown} 
+                      className="w-3 h-3 text-blue-200"
+                    />
+                  )}
+                </button>
+                
+                {seoMenuOpen && !sidebarCollapsed && (
+                  <div className="ml-4 mt-1 space-y-1">
+                    {seoMenuItems.map((item) => {
+                      const isActive = pathname === item.href;
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setSidebarOpen(false)}
+                          className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                            isActive
+                              ? 'bg-[rgba(50,110,180,1)] text-white shadow-sm'
+                              : 'text-blue-100 hover:bg-[rgba(40,90,160,0.5)] hover:text-white'
+                          }`}
+                        >
+                          <FontAwesomeIcon 
+                            icon={item.icon} 
+                            className={`w-4 h-4 mr-3 ${isActive ? 'text-white' : 'text-blue-200'}`}
+                          />
+                          <span>{item.label}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
                 )}
-              </button>
-              
-              {seoMenuOpen && !sidebarCollapsed && (
-                <div className="ml-4 mt-1 space-y-1">
-                  {seoMenuItems.map((item) => {
-                    const isActive = pathname === item.href;
-                    return (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        onClick={() => setSidebarOpen(false)}
-                        className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                          isActive
-                            ? 'bg-[rgba(50,110,180,1)] text-white shadow-sm'
-                            : 'text-blue-100 hover:bg-[rgba(40,90,160,0.5)] hover:text-white'
-                        }`}
-                      >
-                        <FontAwesomeIcon 
-                          icon={item.icon} 
-                          className={`w-4 h-4 mr-3 ${isActive ? 'text-white' : 'text-blue-200'}`}
-                        />
-                        <span>{item.label}</span>
-                      </Link>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+              </div>
+            )}
           </nav>
 
           {/* Logout Button */}

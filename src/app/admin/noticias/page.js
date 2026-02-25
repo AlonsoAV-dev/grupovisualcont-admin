@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Pagination from '@/components/admin/Pagination';
-import { authFetch } from '@/lib/authUtils';
+import { authFetch, getCurrentUser, canEditNoticia, canDeleteNoticia, handlePermissionError } from '@/lib/authUtils';
 
 export default function NoticiasAdmin() {
   const router = useRouter();
@@ -12,10 +12,32 @@ export default function NoticiasAdmin() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [itemsPerPage] = useState(10);
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
+    loadCurrentUser();
     loadNoticias();
   }, [currentPage]);
+
+  const loadCurrentUser = async () => {
+    try {
+      const res = await authFetch('/api/auth/me');
+      if (res.ok) {
+        const data = await res.json();
+        const user = data.user || data.usuario || data;
+        
+        // Normalizar el campo id_usuario (la API puede devolver "id" o "id_usuario")
+        if (user && !user.id_usuario && user.id) {
+          user.id_usuario = user.id;
+        }
+        
+        console.log('👤 Usuario cargado:', user);
+        setCurrentUser(user);
+      }
+    } catch (error) {
+      console.error('Error al cargar usuario:', error);
+    }
+  };
 
   const loadNoticias = async () => {
     try {
@@ -26,7 +48,15 @@ export default function NoticiasAdmin() {
         { cache: 'no-store' }
       );
       const data = await res.json();
-      setNoticias(data.noticias || []);
+      const noticiasList = data.noticias || [];
+      
+      // Log para debug
+      if (noticiasList.length > 0) {
+        console.log('📰 Noticias cargadas:', noticiasList.length);
+        console.log('📰 Primera noticia (ejemplo):', noticiasList[0]);
+      }
+      
+      setNoticias(noticiasList);
       setTotalPages(data.pagination?.totalPages || 1);
     } catch (error) {
       console.error('Error:', error);
@@ -51,6 +81,11 @@ export default function NoticiasAdmin() {
       if (res.ok) {
         // Recargar lista completa para mantener el orden correcto
         await loadNoticias();
+      } else if (handlePermissionError(res)) {
+        // Error 403 manejado
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Error al cambiar el estado de la noticia');
       }
     } catch (error) {
       console.error('Error:', error);
@@ -68,6 +103,11 @@ export default function NoticiasAdmin() {
       if (res.ok) {
         // Recargar lista completa para mantener el orden correcto
         await loadNoticias();
+      } else if (handlePermissionError(res)) {
+        // Error 403 manejado
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Error al eliminar la noticia');
       }
     } catch (error) {
       console.error('Error:', error);
@@ -146,11 +186,10 @@ export default function NoticiasAdmin() {
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                  {noticia.nombre_autor} 
+                  {noticia.autor_nombre || noticia.nombre_autor || 'Sin autor'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <button
-                    onClick={() => handleToggleEstado(noticia.id_noticia, noticia.estado)}
                     className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full cursor-pointer transition-colors ${getEstadoBadge(
                       noticia.estado
                     )} hover:opacity-80`}
@@ -163,18 +202,25 @@ export default function NoticiasAdmin() {
                   {new Date(noticia.creado_en).toLocaleDateString()}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
-                  <Link
-                    href={`/admin/noticias/edit?id=${noticia.id_noticia}`}
-                    className="text-[#257CD0] hover:text-[#1e6bb8]"
-                  >
-                    Editar
-                  </Link>
-                  <button
-                    onClick={() => handleDelete(noticia.id_noticia)}
-                    className="text-red-600 hover:text-red-900"
-                  >
-                    Eliminar
-                  </button>
+                  {currentUser && canEditNoticia(noticia, currentUser) && (
+                    <>
+                      <Link
+                        href={`/admin/noticias/edit?id=${noticia.id_noticia}`}
+                        className="text-[#257CD0] hover:text-[#1e6bb8]"
+                      >
+                        Editar
+                      </Link>
+                      <button
+                        onClick={() => handleDelete(noticia.id_noticia)}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        Eliminar
+                      </button>
+                    </>
+                  )}
+                  {currentUser && !canEditNoticia(noticia, currentUser) && (
+                    <span className="text-gray-400 text-xs">Sin permisos</span>
+                  )}
                 </td>
               </tr>
               ))
