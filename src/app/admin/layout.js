@@ -17,7 +17,8 @@ import {
   faChevronRight,
   faSearch,
   faChevronDown,
-  faChevronUp
+  faChevronUp,
+  faUser
 } from '@fortawesome/free-solid-svg-icons';
 import { authFetch } from '@/lib/authUtils';
 
@@ -272,6 +273,7 @@ export default function AdminLayout({ children }) {
             )}
           </nav>
 
+
           {/* Logout Button */}
           <div className={`p-4 border-t border-[rgba(20,60,110,0.5)] ${sidebarCollapsed ? 'px-2' : ''}`}>
             <button
@@ -299,10 +301,34 @@ export default function AdminLayout({ children }) {
               </p>
             </div>
             <div className="flex items-center space-x-4">
-              <div className="hidden sm:block text-right">
-                <p className="text-sm font-medium text-gray-900 dark:text-white">{user.nombre}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
-              </div>
+              <Link 
+                href="/admin/perfil"
+                className="flex items-center space-x-3 hover:bg-gray-50 dark:hover:bg-gray-700 p-2 rounded-lg transition-colors cursor-pointer"
+              >
+                <div className="hidden sm:block text-right">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">{user.nombre}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
+                </div>
+                <div className="relative">
+                  <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-600 overflow-hidden border-2 border-gray-300 dark:border-gray-500">
+                    {user.foto ? (
+                      <img
+                        src={user.foto}
+                        alt={user.nombre}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="40" height="40"%3E%3Crect fill="%23ddd" width="40" height="40"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-size="20" font-family="Arial"%3E' + (user.nombre?.[0] || '?') + '%3C/text%3E%3C/svg%3E';
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-500 dark:text-gray-300 font-semibold text-lg">
+                        {user.nombre?.[0] || '?'}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Link>
             </div>
           </div>
         </header>

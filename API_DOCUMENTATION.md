@@ -821,6 +821,8 @@ Lista todos los usuarios.
       "email": "admin@example.com",
       "rol": "admin",
       "estado": 1,
+      "foto": "https://example.com/photo.jpg",
+      "descripcion": "Administrador del sistema",
       "ultimo_login": "2024-02-23T10:00:00.000Z",
       "creado_en": "2024-01-01T00:00:00.000Z"
     }
@@ -841,9 +843,19 @@ Crea un nuevo usuario.
   "nombre": "Nuevo Usuario",
   "email": "nuevo@example.com",
   "password": "contraseña123",
-  "rol": "editor"
+  "rol": "editor",
+  "foto": "https://example.com/photo.jpg",
+  "descripcion": "Editor especializado en tecnología"
 }
 ```
+
+**Campos:**
+- `nombre` (requerido): Nombre completo del usuario
+- `email` (requerido): Email del usuario
+- `password` (requerido): Contraseña del usuario
+- `rol` (requerido): `admin` | `editor`
+- `foto` (opcional): URL de la foto de perfil (se convierte automáticamente si es Google Drive)
+- `descripcion` (opcional): Breve descripción del usuario
 
 **Response (201 Created):**
 ```json
@@ -867,9 +879,20 @@ Actualiza un usuario.
   "nombre": "Usuario Actualizado",
   "email": "actualizado@example.com",
   "rol": "admin",
-  "estado": 1
+  "estado": 1,
+  "foto": "https://example.com/new-photo.jpg",
+  "descripcion": "Administrador senior del sistema"
 }
 ```
+
+**Campos:**
+- `nombre` (opcional): Nombre completo del usuario
+- `email` (opcional): Email del usuario
+- `password` (opcional): Nueva contraseña (solo si se desea cambiar)
+- `rol` (opcional): `admin` | `editor`
+- `estado` (opcional): `1` (activo) | `0` (suspendido)
+- `foto` (opcional): URL de la foto de perfil
+- `descripcion` (opcional): Breve descripción del usuario
 
 **Response (200 OK):**
 ```json

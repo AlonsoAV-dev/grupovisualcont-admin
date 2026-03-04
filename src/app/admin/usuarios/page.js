@@ -18,6 +18,8 @@ export default function UsuariosAdmin() {
     email: '',
     password: '',
     rol: 'editor',
+    foto: '',
+    descripcion: '',
   });
 
   useEffect(() => {
@@ -73,7 +75,7 @@ export default function UsuariosAdmin() {
         const data = await res.json();
         // Recargar la lista completa para asegurar sincronización
         await loadUsuarios();
-        setFormData({ nombre: '', email: '', password: '', rol: 'editor' });
+        setFormData({ nombre: '', email: '', password: '', rol: 'editor', foto: '', descripcion: '' });
         setShowModal(false);
       } else if (handlePermissionError(res)) {
         // Error 403 manejado
@@ -93,6 +95,8 @@ export default function UsuariosAdmin() {
       email: usuario.email,
       password: '',
       rol: usuario.rol,
+      foto: usuario.foto || '',
+      descripcion: usuario.descripcion || '',
     });
     setShowModal(true);
   };
@@ -111,6 +115,8 @@ export default function UsuariosAdmin() {
         nombre: formData.nombre,
         email: formData.email,
         rol: formData.rol,
+        foto: formData.foto,
+        descripcion: formData.descripcion,
       };
       
       // Solo incluir password si se ingresó uno nuevo
@@ -127,7 +133,7 @@ export default function UsuariosAdmin() {
       if (res.ok) {
         // Recargar la lista completa para asegurar sincronización
         await loadUsuarios();
-        setFormData({ nombre: '', email: '', password: '', rol: 'editor' });
+        setFormData({ nombre: '', email: '', password: '', rol: 'editor', foto: '', descripcion: '' });
         setShowModal(false);
         setEditingUser(null);
       } else if (handlePermissionError(res)) {
@@ -205,7 +211,7 @@ export default function UsuariosAdmin() {
   const closeModal = () => {
     setShowModal(false);
     setEditingUser(null);
-    setFormData({ nombre: '', email: '', password: '', rol: 'editor' });
+    setFormData({ nombre: '', email: '', password: '', rol: 'editor', foto: '', descripcion: '' });
   };
 
   // Cálculo de paginación
@@ -345,8 +351,8 @@ export default function UsuariosAdmin() {
 
       {/* Modal para crear/editar usuario */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
               {editingUser ? 'Editar Usuario' : 'Nuevo Usuario'}
             </h2>
@@ -391,6 +397,35 @@ export default function UsuariosAdmin() {
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
                   required={!editingUser}
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Foto (URL) <span className="text-gray-400 text-xs">(opcional)</span>
+                </label>
+                <input
+                  type="url"
+                  value={formData.foto}
+                  onChange={(e) =>
+                    setFormData({ ...formData, foto: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
+                  placeholder="https://example.com/photo.jpg"
+                />
+                <p className="text-xs text-gray-500 mt-1">URL de Google Drive o imagen externa</p>
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Descripción <span className="text-gray-400 text-xs">(opcional)</span>
+                </label>
+                <textarea
+                  value={formData.descripcion}
+                  onChange={(e) =>
+                    setFormData({ ...formData, descripcion: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-gray-900"
+                  rows="3"
+                  placeholder="Breve descripción del usuario..."
                 />
               </div>
               <div className="mb-4">
